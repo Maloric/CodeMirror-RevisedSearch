@@ -59,7 +59,9 @@
       value: deflt,
       selectValueOnOpen: true,
       closeOnEnter: false,
-      onClose: () => { clearSearch(cm); },
+      onClose: () => {
+        clearSearch(cm);
+      },
       onKeyDown: onKeyDown,
       closeOnBlur: cm.getOption("searchSettings") ? cm.getOption("searchSettings").closeOnBlur : true
     });
@@ -94,8 +96,9 @@
     var isRE = query.match(/^\/(.*)\/([a-z]*)$/);
     console.log(7);
     if (isRE) {
-      try { query = new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i"); }
-      catch (e) { } // Not a regular expression after all, do a string search
+      try {
+        query = new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i");
+      } catch (e) {} // Not a regular expression after all, do a string search
     } else {
       query = parseString(query)
     }
@@ -112,7 +115,10 @@
     state.overlay = searchOverlay(state.query, queryCaseInsensitive(state.query));
     cm.addOverlay(state.overlay);
     if (cm.showMatchesOnScrollbar) {
-      if (state.annotate) { state.annotate.clear(); state.annotate = null; }
+      if (state.annotate) {
+        state.annotate.clear();
+        state.annotate = null;
+      }
       state.annotate = cm.showMatchesOnScrollbar(state.query, queryCaseInsensitive(state.query));
     }
   }
@@ -126,8 +132,12 @@
         if (!cursor.find(rev)) return;
       }
       cm.setSelection(cursor.from(), cursor.to());
-      cm.scrollIntoView({ from: cursor.from(), to: cursor.to() }, 20);
-      state.posFrom = cursor.from(); state.posTo = cursor.to();
+      cm.scrollIntoView({
+        from: cursor.from(),
+        to: cursor.to()
+      }, 20);
+      state.posFrom = cursor.from();
+      state.posTo = cursor.to();
       if (callback) callback(cursor.from(), cursor.to())
     });
   }
@@ -139,26 +149,29 @@
       if (!state.query) return;
       state.query = state.queryText = null;
       cm.removeOverlay(state.overlay);
-      if (state.annotate) { state.annotate.clear(); state.annotate = null; }
+      if (state.annotate) {
+        state.annotate.clear();
+        state.annotate = null;
+      }
     });
   }
 
   var replaceDialog = `
-    <div class="find">
+    <div class="row find">
       <label for="CodeMirror-find-field">Replace:</label>
       <input id="CodeMirror-find-field" type="text" class="CodeMirror-search-field" placeholder="Find" />
       <span class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>
-      <span id="CodeMirror-search-count"></span>      
+      <span id="CodeMirror-search-count"></span>
     </div>
-    <div class="replace">
+    <div class="row replace">
       <label for="CodeMirror-replace-field">With:</label>
       <input id="CodeMirror-replace-field" type="text" class="CodeMirror-search-field" placeholder="Replace" />
     </div>
     <div class="buttons">
       <button>Find Previous</button>
-      <button>Find Next</button> 
-      <button>Replace</button> 
-      <button>Replace All</button> 
+      <button>Find Next</button>
+      <button>Replace</button>
+      <button>Replace All</button>
       <button>Close</button>
     </div>
   `;
@@ -168,7 +181,7 @@
       <label for="CodeMirror-find-field">Replace:</label>
       <input id="CodeMirror-find-field" type="text" class="CodeMirror-search-field" placeholder="Find" />
       <span class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>
-      <span id="CodeMirror-search-count"></span>      
+      <span id="CodeMirror-search-count"></span>
     </div>
     <div class="buttons">
       <button>Find Previous</button>
@@ -182,7 +195,9 @@
       for (var cursor = getSearchCursor(cm, query); cursor.findNext();) {
         if (typeof query != "string") {
           var match = cm.getRange(cursor.from(), cursor.to()).match(query);
-          cursor.replace(text.replace(/\$(\d)/g, (_, i) => { return match[i]; }));
+          cursor.replace(text.replace(/\$(\d)/g, (_, i) => {
+            return match[i];
+          }));
         } else cursor.replace(text);
       }
     });
@@ -190,16 +205,22 @@
 
   let replaceNext = (cm, query, text) => {
     var cursor = getSearchCursor(cm, query, cm.getCursor("from"));
-    var start = cursor.from(), match;
+    var start = cursor.from(),
+      match;
     if (!(match = cursor.findNext())) {
       cursor = getSearchCursor(cm, query);
       if (!(match = cursor.findNext()) ||
         (start && cursor.from().line == start.line && cursor.from().ch == start.ch)) return;
     }
     cm.setSelection(cursor.from(), cursor.to());
-    cm.scrollIntoView({ from: cursor.from(), to: cursor.to() });
+    cm.scrollIntoView({
+      from: cursor.from(),
+      to: cursor.to()
+    });
     cursor.replace(typeof query == "string" ? text :
-      text.replace(/\$(\d)/g, (_, i) => { return match[i]; }));
+      text.replace(/\$(\d)/g, (_, i) => {
+        return match[i];
+      }));
   }
 
 
