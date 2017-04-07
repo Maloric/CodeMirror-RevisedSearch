@@ -6,9 +6,9 @@
 
 ((mod) => {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
-    mod(require("codemirror"));
+    mod(require("codemirror"), require("codemirror-advanceddialog"));
   else if (typeof define == "function" && define.amd) // AMD
-    define(["codemirror", "codemirror-advancedDialog"], mod);
+    define(["codemirror", "codemirror-advanceddialog"], mod);
   else // Plain browser env
     mod(CodeMirror);
 })((CodeMirror) => {
