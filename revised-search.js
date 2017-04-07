@@ -177,8 +177,8 @@
   `;
 
   var findDialog = `
-    <div class="find">
-      <label for="CodeMirror-find-field">Replace:</label>
+    <div class="row find">
+      <label for="CodeMirror-find-field">Find:</label>
       <input id="CodeMirror-find-field" type="text" class="CodeMirror-search-field" placeholder="Find" />
       <span class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>
       <span id="CodeMirror-search-count"></span>
