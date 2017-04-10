@@ -3,7 +3,6 @@
 
 // Revised search plugin written by Jamie Morris
 // Define search commands. Depends on advanceddialog.js
-
 ((mod) => {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
     mod(require("codemirror"), require("codemirror-advanceddialog"));
@@ -92,15 +91,12 @@
   }
 
   let parseQuery = (query) => {
-    console.log(6, query);
-    var isRE = query.match(/^\/(.*)\/([a-z]*)$/);
-    console.log(7);
-    if (isRE) {
+    var isRE = query.indexOf('/') === 0 && query.lastIndexOf('/') === query.length - 1;
+    if (!!isRE) {
       try {
-        query = new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i");
+        let matches = query.match(/^\/(.*)\/([a-z]*)$/);
+        query = new RegExp(matches[1], matches[2].indexOf("i") == -1 ? "" : "i");
       } catch (e) {} // Not a regular expression after all, do a string search
-    } else {
-      query = parseString(query)
     }
     if (typeof query == "string" ? query == "" : query.test(""))
       query = /x^/;
@@ -108,7 +104,6 @@
   }
 
   let startSearch = (cm, state, query) => {
-    console.log(5);
     state.queryText = query;
     state.query = parseQuery(query);
     cm.removeOverlay(state.overlay, queryCaseInsensitive(state.query));
@@ -123,13 +118,13 @@
     }
   }
 
-  let findNext = (cm, rev, callback) => {
+  let findNext = (cm, reverse, callback) => {
     cm.operation(() => {
       var state = getSearchState(cm);
-      var cursor = getSearchCursor(cm, state.query, rev ? state.posFrom : state.posTo);
-      if (!cursor.find(rev)) {
-        cursor = getSearchCursor(cm, state.query, rev ? CodeMirror.Pos(cm.lastLine()) : CodeMirror.Pos(cm.firstLine(), 0));
-        if (!cursor.find(rev)) return;
+      var cursor = getSearchCursor(cm, state.query, reverse ? state.posFrom : state.posTo);
+      if (!cursor.find(reverse)) {
+        cursor = getSearchCursor(cm, state.query, reverse ? CodeMirror.Pos(cm.lastLine()) : CodeMirror.Pos(cm.firstLine(), 0));
+        if (!cursor.find(reverse)) return;
       }
       cm.setSelection(cursor.from(), cursor.to());
       cm.scrollIntoView({
@@ -227,9 +222,7 @@
   let doSearch = (cm, query, reverse) => {
     var hiding = null;
     var state = getSearchState(cm);
-    console.log(3);
     if (query != state.queryText) {
-      console.log(4);
       startSearch(cm, state, query);
       state.posFrom = state.posTo = cm.getCursor();
     }
@@ -244,7 +237,6 @@
       closeOnEnter: false,
       closeOnBlur: false,
       callback: (inputs, e) => {
-        console.log(2);
         doSearch(cm, query, !!e.shiftKey);
       }
     };
@@ -282,7 +274,6 @@
     if (cm.getOption("readOnly")) return;
     clearSearch(cm);
     var query = cm.getSelection() || getSearchState(cm).lastQuery;
-    console.log(1, query);
     cm.openAdvancedDialog(findDialog, {
       shrinkEditor: true,
       inputBehaviours: [
