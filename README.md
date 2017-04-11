@@ -6,3 +6,11 @@ This is based on the original search addon included with CodeMirror, but with a 
 The editor should make room for the search dialog in order to prevent it from obscuring matches near the top of the document.
 
 In addition, the dialog won't blur on close like the vanilla search, but instead closes either when the user clicks the "close" button or presses escape when either of the text boxes has focus.
+
+## To install
+
+You can install either manually or via npm.  The latter is very simple:
+
+    npm install --save codemirror-revisedsearch
+
+If you want to install manually, however, you will need to include `revised-search.js` as well as both `advanced-dialog.js` and `dialog.css` from the [codemirror-advanceddialog](http://www.github.com/maloric/codemirror-advanceddialog) package.
