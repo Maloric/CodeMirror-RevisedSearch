@@ -230,6 +230,9 @@
   }
 
   let getFindBehaviour = (cm, query, callback) => {
+    if (!query) {
+      query = '';
+    }
     let behaviour = {
       value: query,
       focus: true,
@@ -249,7 +252,7 @@
   let getFindPrevBtnBehaviour = (cm) => {
     return {
       callback: (inputs) => {
-        let query = parseQuery(inputs[0].value);
+        let query = inputs[0].value;
         if (!query) return;
         doSearch(cm, query, true);
       }
