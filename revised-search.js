@@ -274,7 +274,7 @@
     if (cm.getOption("readOnly")) return;
     clearSearch(cm);
     var query = cm.getSelection() || getSearchState(cm).lastQuery;
-    cm.openAdvancedDialog(findDialog, {
+    let closeDialog = cm.openAdvancedDialog(findDialog, {
       shrinkEditor: true,
       inputBehaviours: [
         getFindBehaviour(cm, query)
@@ -285,6 +285,15 @@
         closeBtnBehaviour
       ]
     });
+
+    let closeFindDialogOnReadOnly = (cm, opt) => {
+      if (opt === "readOnly" && !!cm.getOption("readOnly")) {
+        closeDialog();
+        cm.off("optionChange", closeFindDialogOnReadOnly);
+      }
+    };
+
+    cm.on("optionChange", closeFindDialogOnReadOnly);
   }
 
   let replace = (cm, all) => {
@@ -300,7 +309,7 @@
     };
 
     var query = cm.getSelection() || getSearchState(cm).lastQuery;
-    cm.openAdvancedDialog(replaceDialog, {
+    let closeDialog = cm.openAdvancedDialog(replaceDialog, {
       shrinkEditor: true,
       inputBehaviours: [
         getFindBehaviour(cm, query, (inputs) => {
@@ -331,6 +340,15 @@
         closeBtnBehaviour
       ]
     });
+
+    let closeFindDialogOnReadOnly = (cm, opt) => {
+      if (opt === "readOnly" && !!cm.getOption("readOnly")) {
+        closeDialog();
+        cm.off("optionChange", closeFindDialogOnReadOnly);
+      }
+    };
+
+    cm.on("optionChange", closeFindDialogOnReadOnly);
   }
 
   CodeMirror.commands.find = find;

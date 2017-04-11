@@ -1,6 +1,6 @@
 {
   "name": "codemirror-revisedsearch",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A revised interface for the default CodeMirror search addon, putting the find and replace fields in the same dialog as the buttons.",
   "main": "revised-search.js",
   "scripts": {
