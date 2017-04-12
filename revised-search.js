@@ -12,7 +12,7 @@
     mod(CodeMirror);
 })((CodeMirror) => {
   "use strict";
-
+  let numMatches = 0;
   let searchOverlay = (query, caseInsensitive) => {
     if (typeof query == "string")
       query = new RegExp(query.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"), caseInsensitive ? "gi" : "g");
@@ -229,17 +229,19 @@
     findNext(cm, (reverse || false));
   }
 
-  let getFindBehaviour = (cm, query, callback) => {
-    if (!query) {
-      query = '';
+  let getFindBehaviour = (cm, defaultText, callback) => {
+    if (!defaultText) {
+      defaultText = '';
     }
     let behaviour = {
-      value: query,
+      value: defaultText,
       focus: true,
       selectValueOnOpen: true,
       closeOnEnter: false,
       closeOnBlur: false,
       callback: (inputs, e) => {
+        let query = inputs[0].value;
+        if (!query) return;
         doSearch(cm, query, !!e.shiftKey);
       }
     };
@@ -271,6 +273,10 @@
 
   let closeBtnBehaviour = {
     callback: null
+  };
+
+  let countMatches = () => {
+
   };
 
   let find = (cm) => {
