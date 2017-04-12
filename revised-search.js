@@ -91,7 +91,7 @@
   }
 
   let parseQuery = (query) => {
-    var isRE = query.indexOf('/') === 0 && query.lastIndexOf('/') === query.length - 1;
+    var isRE = query.indexOf('/') === 0 && query.lastIndexOf('/') > 0;
     if (!!isRE) {
       try {
         let matches = query.match(/^\/(.*)\/([a-z]*)$/);
@@ -156,7 +156,7 @@
       <label for="CodeMirror-find-field">Replace:</label>
       <input id="CodeMirror-find-field" type="text" class="CodeMirror-search-field" placeholder="Find" />
       <span class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>
-      <span id="CodeMirror-search-count"></span>
+      <span class="CodeMirror-search-count"></span>
     </div>
     <div class="row replace">
       <label for="CodeMirror-replace-field">With:</label>
@@ -176,7 +176,7 @@
       <label for="CodeMirror-find-field">Find:</label>
       <input id="CodeMirror-find-field" type="text" class="CodeMirror-search-field" placeholder="Find" />
       <span class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>
-      <span id="CodeMirror-search-count"></span>
+      <span class="CodeMirror-search-count"></span>
     </div>
     <div class="buttons">
       <button>Find Previous</button>
@@ -219,14 +219,28 @@
   }
 
 
-  let doSearch = (cm, query, reverse) => {
+  let doSearch = (cm, query, reverse, moveToNext) => {
     var hiding = null;
     var state = getSearchState(cm);
     if (query != state.queryText) {
       startSearch(cm, state, query);
       state.posFrom = state.posTo = cm.getCursor();
     }
-    findNext(cm, (reverse || false));
+    if (moveToNext || moveToNext === undefined) {
+      findNext(cm, (reverse || false));
+    }
+    updateCount(cm);
+  }
+
+  let resetCount = (cm) => {
+    cm.getWrapperElement().querySelector('.CodeMirror-search-count').innerHTML = '';
+  }
+
+  let updateCount = (cm) => {
+    let state = getSearchState(cm);
+    let count = countMatches(cm, state);
+    let countText = count === 1 ? '1 match found.' : count + ' matches found.';
+    cm.getWrapperElement().querySelector('.CodeMirror-search-count').innerHTML = countText;
   }
 
   let getFindBehaviour = (cm, defaultText, callback) => {
@@ -243,6 +257,14 @@
         let query = inputs[0].value;
         if (!query) return;
         doSearch(cm, query, !!e.shiftKey);
+      },
+      onInput: (inputs, e) => {
+        let query = inputs[0].value;
+        if (!query) {
+          resetCount(cm);
+          return;
+        };
+        doSearch(cm, query, !!e.shiftKey, false);
       }
     };
     if (!!callback) {
@@ -275,8 +297,19 @@
     callback: null
   };
 
-  let countMatches = () => {
+  let countMatches = (cm, state) => {
+    let value = cm.getDoc().getValue();
+    let globalQuery;
 
+    if (typeof state.query === 'string') {
+      globalQuery = new RegExp(state.queryText, 'ig');
+    } else {
+      globalQuery = new RegExp(state.query.source, state.query.flags + 'g');
+    }
+
+    let matches = value.match(globalQuery);
+    let count = matches ? matches.length : 0;
+    return count;
   };
 
   let find = (cm) => {

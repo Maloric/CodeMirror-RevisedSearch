@@ -14,3 +14,10 @@ You can install either manually or via npm.  The latter is very simple:
     npm install --save codemirror-revisedsearch
 
 If you want to install manually, however, you will need to include `revised-search.js` as well as both `advanced-dialog.js` and `dialog.css` from the [codemirror-advanceddialog](http://www.github.com/maloric/codemirror-advanceddialog) package.
+
+
+## Notable Changes
+
+### v1.0.8 - 2017-04-12
+
+The find is now triggered on each key press and will display the number of matches next to the input box.  This has been tested documents up to 30,000 lines without any percievable difference in speed.

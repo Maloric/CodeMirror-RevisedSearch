@@ -1,6 +1,6 @@
 {
   "name": "codemirror-revisedsearch",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A revised interface for the default CodeMirror search addon, putting the find and replace fields in the same dialog as the buttons.",
   "main": "revised-search.js",
   "scripts": {
@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/Maloric/CodeMirror-RevisedSearch#readme",
   "dependencies": {
-    "codemirror-advanceddialog": "^1.0.0"
+    "codemirror-advanceddialog": "^1.1.0"
   },
   "peerDependencies": {
     "codemirror": "^5.21.0"
