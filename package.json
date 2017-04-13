@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/Maloric/CodeMirror-RevisedSearch#readme",
   "dependencies": {
-    "codemirror-advanceddialog": "^1.1.0"
+    "codemirror-advanceddialog": "^1.1.1"
   },
   "peerDependencies": {
     "codemirror": "^5.21.0"

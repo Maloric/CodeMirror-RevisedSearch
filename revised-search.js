@@ -12,6 +12,41 @@
     mod(CodeMirror);
 })((CodeMirror) => {
   "use strict";
+
+  var replaceDialog = `
+    <div class="row find">
+      <label for="CodeMirror-find-field">Replace:</label>
+      <input id="CodeMirror-find-field" type="text" class="CodeMirror-search-field" placeholder="Find" />
+      <span class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>
+      <span class="CodeMirror-search-count"></span>
+    </div>
+    <div class="row replace">
+      <label for="CodeMirror-replace-field">With:</label>
+      <input id="CodeMirror-replace-field" type="text" class="CodeMirror-search-field" placeholder="Replace" />
+    </div>
+    <div class="buttons">
+      <button>Find Previous</button>
+      <button>Find Next</button>
+      <button>Replace</button>
+      <button>Replace All</button>
+      <button>Close</button>
+    </div>
+  `;
+
+  var findDialog = `
+    <div class="row find">
+      <label for="CodeMirror-find-field">Find:</label>
+      <input id="CodeMirror-find-field" type="text" class="CodeMirror-search-field" placeholder="Find" />
+      <span class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>
+      <span class="CodeMirror-search-count"></span>
+    </div>
+    <div class="buttons">
+      <button>Find Previous</button>
+      <button>Find Next</button>
+      <button>Close</button>
+    </div>
+  `;
+
   let numMatches = 0;
   let searchOverlay = (query, caseInsensitive) => {
     if (typeof query == "string")
@@ -53,35 +88,6 @@
     return cm.getSearchCursor(query, pos, queryCaseInsensitive(query));
   }
 
-  let persistentDialog = (cm, text, deflt, onEnter, onKeyDown) => {
-    cm.openDialog(text, onEnter, {
-      value: deflt,
-      selectValueOnOpen: true,
-      closeOnEnter: false,
-      onClose: () => {
-        clearSearch(cm);
-      },
-      onKeyDown: onKeyDown,
-      closeOnBlur: cm.getOption("searchSettings") ? cm.getOption("searchSettings").closeOnBlur : true
-    });
-  }
-
-  let dialog = (cm, text, shortText, deflt, f) => {
-    if (cm.openDialog) cm.openDialog(text, f, {
-      value: deflt,
-      selectValueOnOpen: true,
-      closeOnBlur: cm.getOption("searchSettings") ? cm.getOption("searchSettings").closeOnBlur : true
-    });
-    else f(prompt(shortText, deflt));
-  }
-
-  let confirmDialog = (cm, text, shortText, fs) => {
-    if (cm.openConfirm) cm.openConfirm(text, fs, {
-      closeOnBlur: cm.getOption("searchSettings") ? cm.getOption("searchSettings").closeOnBlur : true
-    });
-    else if (confirm(shortText)) fs[0]();
-  }
-
   let parseString = (string) => {
     return string.replace(/\\(.)/g, (_, ch) => {
       if (ch == "n") return "\n"
@@ -118,6 +124,33 @@
     }
   }
 
+  let doSearch = (cm, query, reverse, moveToNext) => {
+    var hiding = null;
+    var state = getSearchState(cm);
+    if (query != state.queryText) {
+      startSearch(cm, state, query);
+      state.posFrom = state.posTo = cm.getCursor();
+    }
+    if (moveToNext || moveToNext === undefined) {
+      findNext(cm, (reverse || false));
+    }
+    updateCount(cm);
+  }
+
+  let clearSearch = (cm) => {
+    cm.operation(() => {
+      var state = getSearchState(cm);
+      state.lastQuery = state.query;
+      if (!state.query) return;
+      state.query = state.queryText = null;
+      cm.removeOverlay(state.overlay);
+      if (state.annotate) {
+        state.annotate.clear();
+        state.annotate = null;
+      }
+    });
+  }
+
   let findNext = (cm, reverse, callback) => {
     cm.operation(() => {
       var state = getSearchState(cm);
@@ -137,53 +170,26 @@
     });
   }
 
-  let clearSearch = (cm) => {
-    cm.operation(() => {
-      var state = getSearchState(cm);
-      state.lastQuery = state.query;
-      if (!state.query) return;
-      state.query = state.queryText = null;
-      cm.removeOverlay(state.overlay);
-      if (state.annotate) {
-        state.annotate.clear();
-        state.annotate = null;
-      }
+  let replaceNext = (cm, query, text) => {
+    let cursor = getSearchCursor(cm, query, cm.getCursor('from'));
+    let start = cursor.from();
+    let match = cursor.findNext();
+    if (!match) {
+      cursor = getSearchCursor(cm, query);
+      match = cursor.findNext();
+      if (!match ||
+        (start && cursor.from().line === start.line && cursor.from().ch === start.ch)) return;
+    }
+    cm.setSelection(cursor.from(), cursor.to());
+    cm.scrollIntoView({
+      from: cursor.from(),
+      to: cursor.to()
     });
+    cursor.replace(typeof query === 'string' ? text :
+      text.replace(/\$(\d)/g, (_, i) => {
+        return match[i];
+      }));
   }
-
-  var replaceDialog = `
-    <div class="row find">
-      <label for="CodeMirror-find-field">Replace:</label>
-      <input id="CodeMirror-find-field" type="text" class="CodeMirror-search-field" placeholder="Find" />
-      <span class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>
-      <span class="CodeMirror-search-count"></span>
-    </div>
-    <div class="row replace">
-      <label for="CodeMirror-replace-field">With:</label>
-      <input id="CodeMirror-replace-field" type="text" class="CodeMirror-search-field" placeholder="Replace" />
-    </div>
-    <div class="buttons">
-      <button>Find Previous</button>
-      <button>Find Next</button>
-      <button>Replace</button>
-      <button>Replace All</button>
-      <button>Close</button>
-    </div>
-  `;
-
-  var findDialog = `
-    <div class="row find">
-      <label for="CodeMirror-find-field">Find:</label>
-      <input id="CodeMirror-find-field" type="text" class="CodeMirror-search-field" placeholder="Find" />
-      <span class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>
-      <span class="CodeMirror-search-count"></span>
-    </div>
-    <div class="buttons">
-      <button>Find Previous</button>
-      <button>Find Next</button>
-      <button>Close</button>
-    </div>
-  `;
 
   let replaceAll = (cm, query, text) => {
     cm.operation(() => {
@@ -198,49 +204,44 @@
     });
   }
 
-  let replaceNext = (cm, query, text) => {
-    var cursor = getSearchCursor(cm, query, cm.getCursor("from"));
-    var start = cursor.from(),
-      match;
-    if (!(match = cursor.findNext())) {
-      cursor = getSearchCursor(cm, query);
-      if (!(match = cursor.findNext()) ||
-        (start && cursor.from().line == start.line && cursor.from().ch == start.ch)) return;
+  let closeSearchCallback = (cm, state) => {
+    if (state.annotate) {
+      state.annotate.clear();
+      state.annotate = null;
     }
-    cm.setSelection(cursor.from(), cursor.to());
-    cm.scrollIntoView({
-      from: cursor.from(),
-      to: cursor.to()
-    });
-    cursor.replace(typeof query == "string" ? text :
-      text.replace(/\$(\d)/g, (_, i) => {
-        return match[i];
-      }));
+    clearSearch(cm);
   }
 
-
-  let doSearch = (cm, query, reverse, moveToNext) => {
-    var hiding = null;
-    var state = getSearchState(cm);
-    if (query != state.queryText) {
-      startSearch(cm, state, query);
-      state.posFrom = state.posTo = cm.getCursor();
+  let getOnReadOnlyCallback = (callback) => {
+    let closeFindDialogOnReadOnly = (cm, opt) => {
+      if (opt === 'readOnly' && !!cm.getOption('readOnly')) {
+        callback();
+        cm.off('optionChange', closeFindDialogOnReadOnly);
+      }
     }
-    if (moveToNext || moveToNext === undefined) {
-      findNext(cm, (reverse || false));
-    }
-    updateCount(cm);
-  }
-
-  let resetCount = (cm) => {
-    cm.getWrapperElement().querySelector('.CodeMirror-search-count').innerHTML = '';
-  }
+    return closeFindDialogOnReadOnly;
+  };
 
   let updateCount = (cm) => {
     let state = getSearchState(cm);
-    let count = countMatches(cm, state);
+    let value = cm.getDoc().getValue();
+    let globalQuery;
+
+    if (typeof state.query === 'string') {
+      globalQuery = new RegExp(state.queryText, 'ig');
+    } else {
+      globalQuery = new RegExp(state.query.source, state.query.flags + 'g');
+    }
+
+    let matches = value.match(globalQuery);
+    let count = matches ? matches.length : 0;
+
     let countText = count === 1 ? '1 match found.' : count + ' matches found.';
-    cm.getWrapperElement().querySelector('.CodeMirror-search-count').innerHTML = countText;
+    cm.getWrapperElement().parentNode.querySelector('.CodeMirror-search-count').innerHTML = countText;
+  }
+
+  let resetCount = (cm) => {
+    cm.getWrapperElement().parentNode.querySelector('.CodeMirror-search-count').innerHTML = '';
   }
 
   let getFindBehaviour = (cm, defaultText, callback) => {
@@ -262,6 +263,7 @@
         let query = inputs[0].value;
         if (!query) {
           resetCount(cm);
+          clearSearch(cm);
           return;
         };
         doSearch(cm, query, !!e.shiftKey, false);
@@ -297,24 +299,10 @@
     callback: null
   };
 
-  let countMatches = (cm, state) => {
-    let value = cm.getDoc().getValue();
-    let globalQuery;
-
-    if (typeof state.query === 'string') {
-      globalQuery = new RegExp(state.queryText, 'ig');
-    } else {
-      globalQuery = new RegExp(state.query.source, state.query.flags + 'g');
-    }
-
-    let matches = value.match(globalQuery);
-    let count = matches ? matches.length : 0;
-    return count;
-  };
-
-  let find = (cm) => {
+  CodeMirror.commands.find = (cm) => {
     if (cm.getOption("readOnly")) return;
     clearSearch(cm);
+    let state = getSearchState(cm);
     var query = cm.getSelection() || getSearchState(cm).lastQuery;
     let closeDialog = cm.openAdvancedDialog(findDialog, {
       shrinkEditor: true,
@@ -325,20 +313,18 @@
         getFindPrevBtnBehaviour(cm),
         getFindNextBtnBehaviour(cm),
         closeBtnBehaviour
-      ]
+      ],
+      onClose: () => {
+        closeSearchCallback(cm, state);
+      }
     });
 
-    let closeFindDialogOnReadOnly = (cm, opt) => {
-      if (opt === "readOnly" && !!cm.getOption("readOnly")) {
-        closeDialog();
-        cm.off("optionChange", closeFindDialogOnReadOnly);
-      }
-    };
+    cm.on("optionChange", getOnReadOnlyCallback(closeDialog));
+    startSearch(cm, state, query);
+    updateCount(cm);
+  };
 
-    cm.on("optionChange", closeFindDialogOnReadOnly);
-  }
-
-  let replace = (cm, all) => {
+  CodeMirror.commands.replace = (cm, all) => {
     if (cm.getOption("readOnly")) return;
     clearSearch(cm);
 
@@ -350,7 +336,8 @@
       doSearch(cm, query);
     };
 
-    var query = cm.getSelection() || getSearchState(cm).lastQuery;
+    let state = getSearchState(cm);
+    let query = cm.getSelection() || state.lastQuery;
     let closeDialog = cm.openAdvancedDialog(replaceDialog, {
       shrinkEditor: true,
       inputBehaviours: [
@@ -380,19 +367,14 @@
           }
         },
         closeBtnBehaviour
-      ]
+      ],
+      onClose: () => {
+        closeSearchCallback(cm, state);
+      }
     });
 
-    let closeFindDialogOnReadOnly = (cm, opt) => {
-      if (opt === "readOnly" && !!cm.getOption("readOnly")) {
-        closeDialog();
-        cm.off("optionChange", closeFindDialogOnReadOnly);
-      }
-    };
-
-    cm.on("optionChange", closeFindDialogOnReadOnly);
-  }
-
-  CodeMirror.commands.find = find;
-  CodeMirror.commands.replace = replace;
+    cm.on("optionChange", getOnReadOnlyCallback(closeDialog));
+    startSearch(cm, state, query);
+    updateCount(cm);
+  };
 });
