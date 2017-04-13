@@ -85,7 +85,7 @@
 
   let getSearchCursor = (cm, query, pos) => {
     // Heuristic: if the query string is all lowercase, do a case insensitive search.
-    return cm.getSearchCursor(query, pos, queryCaseInsensitive(query));
+    return cm.getSearchCursor(parseQuery(query), pos, queryCaseInsensitive(query));
   }
 
   let parseString = (string) => {
@@ -97,12 +97,17 @@
   }
 
   let parseQuery = (query) => {
+    if (query.exec) {
+      return query;
+    }
     var isRE = query.indexOf('/') === 0 && query.lastIndexOf('/') > 0;
     if (!!isRE) {
       try {
         let matches = query.match(/^\/(.*)\/([a-z]*)$/);
         query = new RegExp(matches[1], matches[2].indexOf("i") == -1 ? "" : "i");
       } catch (e) {} // Not a regular expression after all, do a string search
+    } else {
+      query = parseString(query);
     }
     if (typeof query == "string" ? query == "" : query.test(""))
       query = /x^/;
@@ -110,6 +115,7 @@
   }
 
   let startSearch = (cm, state, query) => {
+    if (!query || query === '') return;
     state.queryText = query;
     state.query = parseQuery(query);
     cm.removeOverlay(state.overlay, queryCaseInsensitive(state.query));
@@ -226,9 +232,19 @@
     let state = getSearchState(cm);
     let value = cm.getDoc().getValue();
     let globalQuery;
+    let queryText = state.queryText;
+
+    if (!queryText || queryText === '') {
+      resetCount(cm);
+      return;
+    }
+
+    while (queryText.charAt(queryText.length - 1) === '\\') {
+      queryText = queryText.substring(0, queryText.lastIndexOf('\\'));
+    }
 
     if (typeof state.query === 'string') {
-      globalQuery = new RegExp(state.queryText, 'ig');
+      globalQuery = new RegExp(queryText, 'ig');
     } else {
       globalQuery = new RegExp(state.query.source, state.query.flags + 'g');
     }
