@@ -18,6 +18,10 @@ If you want to install manually, however, you will need to include `revised-sear
 
 ## Notable Changes
 
+### v1.0.11 - 2017-04-19
+
+Implemented a build step using Babel to make the addon compatible with browsers that don't yet support ES6 features.  The correct file to include is now dist/revised-search.js.
+
 ### v1.0.8 - 2017-04-12
 
 The find is now triggered on each key press and will display the number of matches next to the input box.  This has been tested documents up to 30,000 lines without any percievable difference in speed.

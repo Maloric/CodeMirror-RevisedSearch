@@ -1,10 +1,12 @@
 {
   "name": "codemirror-revisedsearch",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "A revised interface for the default CodeMirror search addon, putting the find and replace fields in the same dialog as the buttons.",
-  "main": "revised-search.js",
+  "main": "dist/revised-search.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prebuild": "rimraf dist && mkdirp dist",
+    "build": "babel src/revised-search.js --out-file dist/revised-search.js --source-maps"
   },
   "repository": {
     "type": "git",
@@ -23,9 +25,15 @@
   },
   "homepage": "https://github.com/Maloric/CodeMirror-RevisedSearch#readme",
   "dependencies": {
-    "codemirror-advanceddialog": "^1.1.1"
+    "codemirror-advanceddialog": "^1.1.8"
   },
   "peerDependencies": {
     "codemirror": "^5.21.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-latest": "^6.24.1",
+    "mkdirp": "^0.5.1",
+    "rimraf": "^2.6.1"
   }
 }
