@@ -13,14 +13,14 @@ You can install either manually or via npm.  The latter is very simple:
 
     npm install --save codemirror-revisedsearch
 
-If you want to install manually, however, you will need to include `revised-search.js` as well as both `advanced-dialog.js` and `dialog.css` from the [codemirror-advanceddialog](http://www.github.com/maloric/codemirror-advanceddialog) package.
+If you want to install manually, however, you will need to include `dist/revised-search.js` as well as both `dist/advanced-dialog.js` and `dist/dialog.css` from the [codemirror-advanceddialog](http://www.github.com/maloric/codemirror-advanceddialog) package.
 
 
 ## Notable Changes
 
 ### v1.0.11 - 2017-04-19
 
-Implemented a build step using Babel to make the addon compatible with browsers that don't yet support ES6 features.  The correct file to include is now dist/revised-search.js.
+Implemented a build step using Babel to make the addon compatible with browsers that don't yet support ES6 features.  The correct file to include is now `dist/revised-search.js`.
 
 ### v1.0.8 - 2017-04-12
 
